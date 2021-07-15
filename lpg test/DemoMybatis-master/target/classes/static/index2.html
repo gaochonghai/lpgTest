@@ -1,0 +1,145 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>test page</title>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
+    <script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
+    <!--引入分页插件kkpager：一个js 一个css -->
+    <link rel="stylesheet" type="text/css" href="css/kkpager_blue.css" />
+    <script type="text/javascript" src="js/kkpager.min.js"></script>
+
+
+</head>
+<body>
+<table class="table table-striped table-hover" style="width: auto;margin: 0 auto;">
+    <thead>
+    <tr>
+        <td><strong>序号</strong></td>
+        <td><strong>场馆名称</strong></td>
+        <td><strong>预约人</strong></td>
+        <td><strong>预约时间段</strong></td>
+        <td><strong>预约说明</strong></td>
+        <td><strong>状态</strong></td>
+        <td><strong>场馆负责人</strong></td>
+        <td><strong>分派人</strong></td>
+        <td><strong>分派时间</strong></td>
+        <td><strong>备注</strong></td>
+        <td><strong>操作</strong></td>
+    </tr>
+    </thead>
+    <tbody id="content">
+    <!--主体-->
+    </tbody>
+</table>
+
+<div style="width:800px;margin:0 auto;    margin-right: 30px; margin-top: 30px;">
+    <div id="kkpager"></div>
+</div>
+<input id="totalNum" type="hidden"/>
+<script src="js/bootstrap.min.js"></script>
+<script type="text/javascript">
+
+
+    //初始化分页插件（简单的20行代码搞定）
+    $(function(){
+        var pageNo = getParameter('pno');
+        if(!pageNo){
+            pageNo = 1;
+        }
+        initRecord(pageNo);//页面加载完先把第一页的记录展示出来
+        var totalRecords = $("#totalNum").val();
+        var totalPage = Math.ceil(totalRecords/pageSize);
+        console.log(totalRecords)
+        kkpager.generPageHtml({
+            pno : pageNo,//总页码
+            total : totalPage,//总数据条数
+            totalRecords : totalRecords,
+            mode : 'click',//默认值是link，可选link或者click
+            click : function(pageNo){
+                this.selectPage(pageNo);
+                initRecord(pageNo);//点击页码的时候，显示对应页的记录
+                return false;
+            }
+        });
+    });
+
+    function initRecord(pageNo){
+        $.ajax({
+            url: base+"/note/getNote.htm",
+            type: 'POST',
+            dataType: 'JSON',
+            async: false,//这里面必须改为同步，因为要先执行ajax获取记录总数totalRecords
+            data: {
+                "token": token,
+                "pageNo": pageNo,
+                "pageSize": pageSize,
+                "sort": "asc"
+            },
+            success: function (res) {
+                if (res.code == '0') {
+                    console.log(res);
+                    var tbodyHtml = "";
+                    $.each(res.data,function(k,v){
+                        tbodyHtml += '<tr>';
+                        tbodyHtml += '<td>'+((pageNo-1)*pageSize+k+1)+'</td>';
+                        tbodyHtml += '<td>'+v.siteName+'</td>';
+                        tbodyHtml += '<td>'+v.bookingPerson+'</td>';
+                        tbodyHtml += '<td>'+format(v.startDate)+' - '+format(v.defaultEndDate)+'</td>';
+                        if(v.bookingComment.length > 15){
+                            tbodyHtml += '<td><div class="chufa" data-toggle="tooltip" data-html="true" data-placement="right" title="'+v.bookingComment+'">'+v.bookingComment+'</div></td>';
+                        }else{
+                            tbodyHtml += '<td>'+v.bookingComment+'</td>';
+                        }
+                        tbodyHtml += '<td>'+v.dispatchStatus+'</td>';
+                        /* tbodyHtml += '<td>'+v.principal+'</td>'; */
+                        //负责人(如果1个，直接在td显示姓名；如果多个在td显示总数，提示框显示姓名)
+                        tbodyHtml += '<td>';
+                        if(v.principalNum == 1){
+                            $.each(v.principal,function(k1,v1){
+                                $.each(v1,function(k2,v2){
+                                    if(k2 == 1){
+                                        tbodyHtml += ''+v2+'';
+                                    }
+                                })
+                            })
+                        }else{
+                            var titleHtml = "";
+                            $.each(v.principal,function(k1,v1){
+                                $.each(v1,function(k2,v2){
+                                    if(k2 == 1){
+                                        titleHtml += ''+v2+'';
+                                        titleHtml += ' ';
+                                    }
+                                })
+                            })
+                            tbodyHtml += '<div style="position:relative;"><span data-toggle="tooltip" data-html=true data-placement="right" title="'+titleHtml+'">'+v.principalNum+'</span></div>';
+                        }
+                        tbodyHtml += '</td>';
+                        tbodyHtml += '<td>'+v.dispatchName+'</td>';
+                        tbodyHtml += '<td>'+format(v.dispatchDate)+'</td>';
+                        if(v.dispatchComment.length > 15){
+                            tbodyHtml += '<td><div class="chufa" data-toggle="tooltip" data-html="true" data-placement="right" title="'+v.dispatchComment+'">'+v.dispatchComment+'</div></td>';
+                        }else{
+                            tbodyHtml += '<td>'+v.dispatchComment+'</td>';
+                        }
+                        if(v.dispatchStatus == "未分派"){
+                            tbodyHtml += '<td><a style="color: #43A9ED" data-toggle="modal" data-target="#assignment" data-comment="'+v.bookingComment+'" data-id="'+v.id+'" data-name="'+v.siteName+'" onclick="passIdToModal(this);">分派</a></td>';
+                        }else{
+                            tbodyHtml += '<td></td>';
+                        }
+
+                        tbodyHtml += '</tr>';
+
+                    })
+
+                    $("#content").html(tbodyHtml);
+                    $("#totalNum").val(res.data[0].myNoteCount);
+                }
+            }
+        })
+    }
+
+</script>
+
+</body>
+</html>

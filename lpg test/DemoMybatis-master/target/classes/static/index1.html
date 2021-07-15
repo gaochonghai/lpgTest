@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="/webjars/bootstrap/3.3.5/css/bootstrap.min.css" />
+
+    <script src="/webjars/jquery/3.1.1/jquery.min.js"></script>
+    <script src="/webjars/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <div class="alert alert-info" style="height:auto;">
+        <form style="height:auto;">
+            <div id="category_div" class="form-group" style="height:auto;">
+            </div>
+        </form>
+    </div>
+    <div class="input-append" style="float:right; margin-right:20px;">
+        <input id="search" type="text" style="float:left; width:200px;">
+        <button class="btn" type="button"  onclick="search()">search</button>
+    </div>
+    <table class="table table-hover">
+        <tr>
+            <th>id</th>
+            <th>name</th>
+            <th>description</th>
+            <th>category</th>
+            <th>create date</th>
+            <th>update date</th>
+            <th>last purchased date</th>
+            <th>action</th>
+        </tr>
+
+        <tbody class="pool">
+
+        </tbody>
+
+    </table>
+</div>
+</body>
+<!--<script type="text/javascript" src="js/kkpager.js"></script>-->
+<!--<script type="text/javascript" src="js/getDate1.js"></script>-->
+
+<script type="text/javascript">
+
+
+
+    $(function(){
+        getcategories();
+        initTable();
+        $("#all").prop("checked",true);
+        $('input[type=radio][name=categoryName]').change(function () {
+            var myvalue = $(this).val();
+            if(myvalue==0){
+                var product ={
+                    "categoryId":null
+                    // "password":passWord
+                }
+            }else{
+                var product ={
+                    "categoryId":myvalue
+                    // "password":passWord
+                }
+            }
+
+            getProduct(product);
+        });
+    });
+
+    function initTable() {
+        $.get({
+            url:'product/list',
+            success:function (data) {
+
+                for(var i=0;i<data.length;i++){
+                    var status = data[i].categoryId;
+                    var category= "";
+                    if(status==1){
+                        category = "Kitchen";
+                    }else if(status==2){
+                        category = "Power Tools";
+                    }else if(status==3){
+                        category = "Furniture";
+                    }else if(status==4){
+                        category = "Electric";
+                    }else if(status==5){
+                        category = "Washroom";
+                    }else if(status==6){
+                        category = "Textiles";
+                    }else if(status==7){
+                        category = "Misc.";
+                    }
+                    var text="  <tr>\n" +
+                        "            <th>"+data[i].id+"</th>\n" +
+                        "            <th>"+data[i].name+"</th>\n" +
+                        "            <th>"+data[i].description+"</th>\n" +
+                        "            <th>"+category+"</th>\n" +
+                        "            <th>"+data[i].createDate+"</th>\n" +
+                        "            <th>"+data[i].updateDate+"</th>\n" +
+                        "            <th>"+data[i].lastPurchasedDate+"</th>\n" +
+                        "            <td>\n" +
+                        "                <a href=\"user/delById?id="+data[i].id+"\" class=\"btn btn-danger\">delete</a>\n" +
+                        "                <a href=\"update1.html?id="+data[i].id+"\" class=\"btn btn-success\">update</a>\n" +
+                        "            </td>\n" +
+                        "        </tr>"
+                    var obj= $(".pool");
+                    obj.append(text);
+                }
+            }
+        })
+    }
+
+    function getProduct(product){
+        var params=JSON.stringify(product)
+        $.post({
+            url:'product/getProduct',
+            data:params,
+            dataType: "json",
+            contentType:'application/json',
+            success:function (data) {
+                $("#search").val("");
+                $(".pool").empty();
+                console.log(JSON.stringify(data))
+                // searchResult(data);
+                for(var i=0;i<data.length;i++){
+                    var status = data[i].categoryId;
+                    var category= "";
+                    if(status==1){
+                        category = "Kitchen";
+                    }else if(status==2){
+                        category = "Power Tools";
+                    }else if(status==3){
+                        category = "Furniture";
+                    }else if(status==4){
+                        category = "Electric";
+                    }else if(status==5){
+                        category = "Washroom";
+                    }else if(status==6){
+                        category = "Textiles";
+                    }else if(status==7){
+                        category = "Misc.";
+                    }
+                    var text="  <tr>\n" +
+                        "            <th>"+data[i].id+"</th>\n" +
+                        "            <th>"+data[i].name+"</th>\n" +
+                        "            <th>"+data[i].description+"</th>\n" +
+                        "            <th>"+category+"</th>\n" +
+                        "            <th>"+data[i].createDate+"</th>\n" +
+                        "            <th>"+data[i].updateDate+"</th>\n" +
+                        "            <th>"+data[i].lastPurchasedDate+"</th>\n" +
+                        "            <td>\n" +
+                        "                <a href=\"user/delById?id="+data[i].id+"\" class=\"btn btn-danger\">delete</a>\n" +
+                        "                <a href=\"update1.html?id="+data[i].id+"\" class=\"btn btn-success\">update</a>\n" +
+                        "            </td>\n" +
+                        "        </tr>"
+                    var obj= $(".pool");
+                    obj.append(text);
+                }
+            }
+        })
+    }
+    function getProductByCategory(){
+        $(".pool").empty();
+        $.ajax({
+            url : 'product/getAllByName',
+            data : {'name':$("#search").val().trim()},
+            type : 'post',
+            dataType : 'json',
+            async : false,
+            success : function(data) {
+                console.log(JSON.stringify(data))
+                // searchResult(data);
+                for(var i=0;i<data.length;i++){
+                    var text="  <tr>\n" +
+                        "            <th>"+data[i].id+"</th>\n" +
+                        "            <th>"+data[i].name+"</th>\n" +
+                        "            <th>"+data[i].description+"</th>\n" +
+                        "            <th>"+data[i].categoryId+"</th>\n" +
+                        "            <th>"+data[i].createDate+"</th>\n" +
+                        "            <th>"+data[i].updateDate+"</th>\n" +
+                        "            <th>"+data[i].lastPurchasedDate+"</th>\n" +
+                        "            <td>\n" +
+                        "                <a href=\"user/delById?id="+data[i].id+"\" class=\"btn btn-danger\">delete</a>\n" +
+                        "                <a href=\"update1.html?id="+data[i].id+"\" class=\"btn btn-success\">update</a>\n" +
+                        "            </td>\n" +
+                        "        </tr>"
+                    var obj= $(".pool");
+                    obj.append(text);
+                }
+            }
+        });
+    }
+
+    function getcategories(){
+        $.ajax({
+            url : 'category/getCategories',
+            dataType : "json",
+// 			data:{"id":id},
+            async : false,
+            type : "GET",
+            success : function(data) {
+                $("#category_div").append("<label class='radio-inline' style='float:left;  font-size:15px; margin-right: 10px;'><input type='radio' id="+"all"+" value="+0+" name='categoryName'>"+" "+"all"+" "+"</label>");
+                $.each(data, function(i, n) {
+                    console.log(JSON.stringify(data))
+				$("#category_div").append("<label class='radio-inline' style='float:left;  font-size:15px; margin-right: 10px;'><input type='radio' id="+n.categoryName+" value="+n.id+" name='categoryName'>"+" "+n.categoryName+" "+"</label>");
+                });
+            }
+        });
+    }
+
+    function search(){
+// 		alert();
+//     if($("#search").val().trim()==""|| $("#search").val().trim()==null){
+//         alert("不能为空");
+//     }
+
+        $(".pool").empty();
+        $('input[type=radio][name=categoryName]').prop("checked",false);
+        $.ajax({
+            url : 'product/getAllByName',
+            data : {'name':$("#search").val().trim()},
+            type : 'post',
+            dataType : 'json',
+            async : false,
+            success : function(data) {
+                console.log(JSON.stringify(data))
+                // searchResult(data);
+                for(var i=0;i<data.length;i++){
+                    var text="  <tr>\n" +
+                        "            <th>"+data[i].id+"</th>\n" +
+                        "            <th>"+data[i].name+"</th>\n" +
+                        "            <th>"+data[i].description+"</th>\n" +
+                        "            <th>"+data[i].categoryId+"</th>\n" +
+                        "            <th>"+data[i].createDate+"</th>\n" +
+                        "            <th>"+data[i].updateDate+"</th>\n" +
+                        "            <th>"+data[i].lastPurchasedDate+"</th>\n" +
+                        "            <td>\n" +
+                        "                <a href=\"user/delById?id="+data[i].id+"\" class=\"btn btn-danger\">delete</a>\n" +
+                        "                <a href=\"update1.html?id="+data[i].id+"\" class=\"btn btn-success\">update</a>\n" +
+                        "            </td>\n" +
+                        "        </tr>"
+                    var obj= $(".pool");
+                    obj.append(text);
+                }
+            }
+        });
+
+
+
+    }
+</script>
+
+</html>

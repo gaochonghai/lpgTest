@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Title</title>
+    <link rel="stylesheet" href="css/bootstrap.css">
+</head>
+<body>
+<table class="table table-border table-hover">
+    <thead>
+    <tr>
+        <th>id</th>
+        <th>name</th>
+        <th>description</th>
+        <th>create date</th>
+        <th>update date</th>
+        <th>last purchased date</th>
+        <th>action</th>
+    </tr>
+    </thead>
+    <tbody class="pool">
+    </tbody>
+</table>
+<div class="page">
+    <ul class="pagination"></ul>
+</div>
+<script type="text/template" id="tableTemp">
+    <%for(let i = 0; i < item.length; i++){%>
+    <tr>
+        <td><%=(item[i].page * item[i].pageSize )+ i + 1%></td>
+        <td><%=item[i].name%></td>
+        <td><%=item[i].gender%></td>
+        <td><%=item[i].age%></td>
+    </tr>
+    <%}%>
+</script>
+</body>
+</html>
+<!--使用bootstrap插件必须使用引入jquery,因为bootstrap是基于jquery开发的-->
+<script src="js/jquery-1.10.2.min.js"></script>
+<!--bootstrap插件-->
+<script src="js/bootstrap.js"></script>
+<!--分页插件-->
+<script src="js/bootstrap-paginator.js"></script>
+<!--模板插件-->
+<!--<script src="./lib/template-native.js"></script>-->
+<script>
+    let currentPage = 1;
+    let pageSize = 3;
+    function render() {
+        var params=JSON.stringify(product)
+        var product ={
+            // "categoryId":myvalue
+            // "password":passWord
+        }
+        //提交后端接口
+        $.post({
+            url:'product/getProduct',
+            data:params,
+            dataType: "json",
+            contentType:'application/json',
+            success:function (data) {
+                $(".pool").empty();
+                console.log(JSON.stringify(data))
+                // searchResult(data);
+                for(var i=0;i<data.length;i++){
+                    var categoryId = data[i].categoryId;
+                    var categoryName= "";
+                    if(categoryId==1){
+                        categoryName = "Kitchen";
+                    }else if(categoryId==2){
+                        categoryName = "Power Tools";
+                    }else if(categoryId==3){
+                        categoryName = "Furniture";
+                    }else if(categoryId==4){
+                        categoryName = "Electric";
+                    }else if(categoryId==5){
+                        categoryName = "Washroom";
+                    }else if(categoryId==6){
+                        categoryName = "Textiles";
+                    }else if(categoryId==7){
+                        categoryName = "Misc.";
+                    }
+
+                    var text="  <tr>\n" +
+                        "            <th>"+data[i].id+"</th>\n" +
+                        "            <th>"+data[i].name+"</th>\n" +
+                        "            <th>"+data[i].description+"</th>\n" +
+                        "            <th>"+categoryName+"</th>\n" +
+                        "            <th>"+data[i].createDate+"</th>\n" +
+                        "            <th>"+data[i].updateDate+"</th>\n" +
+                        "            <th>"+data[i].lastPurchasedDate+"</th>\n" +
+                        "            <td>\n" +
+                        "                <a href=\"user/delById?id="+data[i].id+"\" class=\"btn btn-danger\">delete</a>\n" +
+                        "                <a href=\"update1.html?id="+data[i].id+"\" class=\"btn btn-success\">update</a>\n" +
+                        "            </td>\n" +
+                        "        </tr>"
+                    var obj= $(".pool");
+                    obj.append(text);
+                }
+                // 调用分页函数.参数:当前所在页, 总页数(用总条数 除以 每页显示多少条,在向上取整), ajax函数
+                setPage(currentPage, Math.ceil(data.length/pageSize), render)
+            }
+        })
+
+
+
+    }
+    render()
+
+    /**
+     *
+     * @param pageCurrent 当前所在页
+     * @param pageSum 总页数
+     * @param callback 调用ajax
+     */
+    function setPage(pageCurrent, pageSum, callback) {
+        $(".pagination").bootstrapPaginator({
+            //设置版本号
+            bootstrapMajorVersion: 3,
+            // 显示第几页
+            currentPage: pageCurrent,
+            // 总页数
+            totalPages: pageSum,
+            //当单击操作按钮的时候, 执行该函数, 调用ajax渲染页面
+            onPageClicked: function (event,originalEvent,type,page) {
+                // 把当前点击的页码赋值给currentPage, 调用ajax,渲染页面
+                currentPage = page
+                callback && callback()
+            }
+        })
+    }
+</script>
